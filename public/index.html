@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UNO</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="conn-banner" class="conn-banner hidden"></div>
+  <div id="notice" class="notice hidden"></div>
+  <div id="app">
+    <section id="home" class="screen">
+      <h1>UNO</h1>
+      <div class="panel">
+        <label>Your name
+          <input id="name-input" maxlength="20" placeholder="Player" />
+        </label>
+        <button id="create-btn">Create room</button>
+        <div class="divider">or</div>
+        <label>Room code
+          <input id="code-input" maxlength="4" placeholder="ABCD" />
+        </label>
+        <button id="join-btn">Join room</button>
+        <div id="home-error" class="error"></div>
+      </div>
+    </section>
+
+    <section id="lobby" class="screen hidden">
+      <h2>Room <span id="room-code"></span></h2>
+      <p class="hint">Share this code with friends.</p>
+      <ul id="player-list"></ul>
+      <button id="start-btn" class="hidden">Start game</button>
+      <p id="lobby-wait" class="hint hidden">Waiting for host to start…</p>
+    </section>
+
+    <section id="game" class="screen hidden">
+      <div id="opponents"></div>
+      <div id="table">
+        <div id="deck-area">
+          <div id="deck" class="card back" title="Draw">
+            <div class="oval"><span class="glyph">UNO</span></div>
+          </div>
+          <div id="deck-count"></div>
+        </div>
+        <div id="discard-area">
+          <div id="top-card" class="card"></div>
+        </div>
+        <div id="status"></div>
+        <div id="turn-timer" class="hidden"></div>
+      </div>
+      <div id="controls">
+        <button id="draw-btn">Draw</button>
+        <button id="uno-btn">UNO!</button>
+        <button id="leave-btn" class="secondary">Leave</button>
+      </div>
+      <div id="hand"></div>
+
+      <div id="color-picker" class="modal hidden">
+        <div class="modal-content">
+          <h3>Choose a color</h3>
+          <div class="colors">
+            <button data-color="red" class="color-swatch red"></button>
+            <button data-color="yellow" class="color-swatch yellow"></button>
+            <button data-color="green" class="color-swatch green"></button>
+            <button data-color="blue" class="color-swatch blue"></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="banner" class="banner hidden"></div>
+    </section>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client.js" type="module"></script>
+</body>
+</html>
