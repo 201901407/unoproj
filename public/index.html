@@ -35,22 +35,30 @@
     </section>
 
     <section id="game" class="screen hidden">
-      <div id="opponents"></div>
-      <div id="table">
-        <div id="deck-area">
-          <div id="deck" class="card back" title="Draw">
-            <div class="oval"><span class="glyph">UNO</span></div>
+      <div id="table-layout">
+        <div id="table-ring">
+          <div id="table-center">
+            <div id="direction-indicator" title="Turn direction"></div>
+            <div id="pile-area">
+              <div id="deck-area">
+                <div id="deck" class="card back" title="Draw">
+                  <div class="oval"><span class="glyph">UNO</span></div>
+                </div>
+                <div id="deck-count"></div>
+              </div>
+              <div id="discard-area">
+                <div id="top-card" class="card"></div>
+              </div>
+            </div>
+            <div id="status"></div>
+            <div id="turn-timer" class="hidden"></div>
           </div>
-          <div id="deck-count"></div>
         </div>
-        <div id="discard-area">
-          <div id="top-card" class="card"></div>
-        </div>
-        <div id="status"></div>
-        <div id="turn-timer" class="hidden"></div>
+        <div id="self-seat" class="seat"></div>
       </div>
       <div id="controls">
         <button id="draw-btn">Draw</button>
+        <button id="skip-btn" class="secondary hidden">Pass</button>
         <button id="uno-btn">UNO!</button>
         <button id="leave-btn" class="secondary">Leave</button>
       </div>

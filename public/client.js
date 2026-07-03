@@ -69,6 +69,12 @@ $('draw-btn').addEventListener('click', () => {
   });
 });
 
+$('skip-btn').addEventListener('click', () => {
+  socket.emit('skip-turn', {}, (res) => {
+    if (res?.error) flash(res.error);
+  });
+});
+
 $('uno-btn').addEventListener('click', () => {
   socket.emit('call-uno', {}, (res) => {
     if (res?.error) flash(res.error);
@@ -238,23 +244,75 @@ function canPlayClient(state, card) {
   return card.color === state.currentColor || card.value === state.currentValue;
 }
 
+function seatPosition(stepsAhead, total) {
+  const angleDeg = 180 + (stepsAhead / total) * 180;
+  const rad = (angleDeg * Math.PI) / 180;
+  const radius = 46;
+  return {
+    left: `${50 + radius * Math.cos(rad)}%`,
+    top: `${50 + radius * Math.sin(rad)}%`,
+  };
+}
+
+function turnStepsAhead(myIndex, playerIndex, total, direction) {
+  if (direction === 1) return (playerIndex - myIndex + total) % total;
+  return (myIndex - playerIndex + total) % total;
+}
+
+function buildSeatEl(player, { isYou, isTurn, connected }) {
+  const d = document.createElement('div');
+  d.className = 'opponent';
+  if (isYou) d.classList.add('you');
+  if (isTurn) d.classList.add('turn');
+  if (connected === false) d.classList.add('disconnected');
+  d.innerHTML = `
+    ${isYou ? '<div class="you-label">YOU</div>' : ''}
+    <div class="name">${escapeHtml(player.name)}</div>
+    <div class="opp-cards">
+      <div class="card small back"><div class="oval"><span class="glyph">UNO</span></div></div>
+      <div class="count">×${player.handCount}</div>
+    </div>
+  `;
+  return d;
+}
+
 function renderGame(state) {
-  const opps = $('opponents');
-  opps.innerHTML = '';
+  const ring = $('table-ring');
+  ring.querySelectorAll('.seat:not(#self-seat)').forEach(el => el.remove());
+
+  const myIndex = state.players.findIndex(p => p.id === myId);
+  const n = state.players.length;
+  const dir = state.direction ?? 1;
+
+  $('direction-indicator').textContent = dir === 1 ? '↻' : '↺';
+  $('direction-indicator').title = dir === 1 ? 'Turns go clockwise' : 'Turns go counter-clockwise';
+
   for (const p of state.players) {
     if (p.id === myId) continue;
-    const d = document.createElement('div');
-    d.className = 'opponent';
-    if (p.id === state.turnPlayerId) d.classList.add('turn');
-    if (p.connected === false) d.classList.add('disconnected');
-    d.innerHTML = `
-      <div class="name">${escapeHtml(p.name)}</div>
-      <div class="opp-cards">
-        <div class="card small back"><div class="oval"><span class="glyph">UNO</span></div></div>
-        <div class="count">×${p.handCount}</div>
-      </div>
-    `;
-    opps.appendChild(d);
+    const pIndex = state.players.findIndex(x => x.id === p.id);
+    const steps = turnStepsAhead(myIndex, pIndex, n, dir);
+    const pos = seatPosition(steps, n);
+    const seat = document.createElement('div');
+    seat.className = 'seat';
+    seat.style.left = pos.left;
+    seat.style.top = pos.top;
+    seat.appendChild(buildSeatEl(p, {
+      isYou: false,
+      isTurn: p.id === state.turnPlayerId,
+      connected: p.connected,
+    }));
+    ring.appendChild(seat);
+  }
+
+  const selfSeat = $('self-seat');
+  selfSeat.innerHTML = '';
+  const me = state.players.find(p => p.id === myId);
+  if (me) {
+    selfSeat.appendChild(buildSeatEl(me, {
+      isYou: true,
+      isTurn: state.turnPlayerId === myId,
+      connected: true,
+    }));
   }
 
   const topCard = state.topCard;
@@ -274,6 +332,7 @@ function renderGame(state) {
   const turnPlayer = state.players.find(p => p.id === state.turnPlayerId);
   let status = myTurn ? 'Your turn.' : `${turnPlayer?.name || '...'}'s turn.`;
   if (state.drawStack > 0) status += ` Draw stack: ${state.drawStack}.`;
+  if (state.canSkipTurn) status += ' Play your drawn card or pass.';
   if (state.currentColor !== topCard.color && topCard.color === 'wild') {
     status += ` Color is ${state.currentColor}.`;
   }
@@ -292,7 +351,10 @@ function renderGame(state) {
     hand.appendChild(el);
   }
 
-  $('draw-btn').disabled = !myTurn || !!state.winnerId;
+  const canDraw = myTurn && !state.winnerId && !state.canSkipTurn;
+  $('draw-btn').disabled = !canDraw;
+  $('skip-btn').classList.toggle('hidden', !state.canSkipTurn || !!state.winnerId);
+  $('skip-btn').disabled = !state.canSkipTurn || !!state.winnerId;
   $('uno-btn').disabled = !(state.hand.length === 1 && !state.winnerId);
   $('uno-btn').classList.toggle('urgent', state.unoPenaltyFor === myId && !state.winnerId);
 
@@ -316,7 +378,7 @@ function renderGame(state) {
     banner.innerHTML = '';
   }
 
-  const deckActive = myTurn && !state.winnerId;
+  const deckActive = canDraw;
   $('deck').classList.toggle('active', deckActive);
   $('deck').onclick = deckActive ? () => $('draw-btn').click() : null;
 }

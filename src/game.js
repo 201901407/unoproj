@@ -54,6 +54,7 @@ export function createGame(players) {
     winnerId: null,
     lastAction: null,
     unoCalls: {},
+    drewThisTurn: null,
   };
 }
 
@@ -72,6 +73,7 @@ export function canPlay(state, card) {
 function advance(state, steps = 1) {
   const n = state.players.length;
   state.turnIndex = (state.turnIndex + steps * state.direction + n * steps) % n;
+  state.drewThisTurn = null;
 }
 
 function reshuffleIfNeeded(state) {
@@ -122,6 +124,7 @@ export function playCard(state, playerId, cardId, chosenColor) {
   }
 
   state.lastAction = { type: 'play', playerId, card, chosenColor: chosenColor || null };
+  state.drewThisTurn = null;
 
   if (hand.length === 0) {
     state.winnerId = playerId;
@@ -156,6 +159,7 @@ export function drawTurn(state, playerId) {
   if (state.winnerId) return { error: 'game over' };
   const player = currentPlayer(state);
   if (player.id !== playerId) return { error: 'not your turn' };
+  if (state.drewThisTurn === playerId) return { error: 'already drew — play or pass' };
 
   if (state.drawStack > 0) {
     const drawn = drawCards(state, playerId, state.drawStack);
@@ -169,10 +173,22 @@ export function drawTurn(state, playerId) {
   state.lastAction = { type: 'draw', playerId, count: 1 };
   const card = drawn[0];
   if (card && canPlay(state, card)) {
+    state.drewThisTurn = playerId;
     return { ok: true, drawn, playable: true };
   }
   advance(state, 1);
   return { ok: true, drawn, playable: false };
+}
+
+export function skipTurn(state, playerId) {
+  if (state.winnerId) return { error: 'game over' };
+  const player = currentPlayer(state);
+  if (player.id !== playerId) return { error: 'not your turn' };
+  if (state.drewThisTurn !== playerId) return { error: 'can only pass after drawing' };
+
+  state.lastAction = { type: 'pass', playerId };
+  advance(state, 1);
+  return { ok: true };
 }
 
 export function callUno(state, playerId) {
@@ -202,6 +218,7 @@ export function removeFromGame(state, playerId) {
   state.deck = shuffle([...state.deck, ...reclaimed]);
   delete state.hands[playerId];
   delete state.unoCalls[playerId];
+  if (state.drewThisTurn === playerId) state.drewThisTurn = null;
   state.players.splice(idx, 1);
   state.lastAction = { type: 'drop', playerId };
 
@@ -248,5 +265,6 @@ export function publicState(state, viewerId) {
     deckCount: state.deck.length,
     winnerId: state.winnerId,
     lastAction: state.lastAction,
+    canSkipTurn: cur?.id === viewerId && state.drewThisTurn === viewerId,
   };
 }

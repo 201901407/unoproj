@@ -3,7 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { createGame, playCard, drawTurn, callUno, publicState, removeFromGame, currentPlayer, drawCards } from './src/game.js';
+import { createGame, playCard, drawTurn, skipTurn, callUno, publicState, removeFromGame, currentPlayer, drawCards } from './src/game.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -265,6 +265,20 @@ io.on('connection', (socket) => {
     } else {
       armTurnTimer(joinedCode);
       if (room.unoPenaltyFor === playerId) clearUnoPenalty(room);
+    }
+    broadcastRoom(joinedCode);
+  });
+
+  socket.on('skip-turn', (_, cb) => {
+    const room = getRoom(joinedCode);
+    if (!room?.game) return cb?.({ error: 'no game' });
+    const result = skipTurn(room.game, playerId);
+    cb?.(result);
+    if (room.game.winnerId) {
+      clearTurnTimer(room);
+      clearUnoPenalty(room);
+    } else if (result.ok) {
+      armTurnTimer(joinedCode);
     }
     broadcastRoom(joinedCode);
   });
