@@ -102,6 +102,28 @@ button.secondary:hover:not(:disabled) { background: rgba(255, 204, 0, 0.12); }
   user-select: none;
 }
 
+.turn-summary {
+  width: min(320px, 100%);
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(8, 24, 18, 0.72);
+  border: 1px solid rgba(255, 204, 0, 0.28);
+  text-align: center;
+  box-shadow: inset 0 1px 4px rgba(255,255,255,0.08);
+}
+.turn-summary-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffcc00;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.turn-summary-sub {
+  font-size: 12px;
+  color: #eaf5ff;
+  margin-top: 2px;
+}
+
 #pile-area {
   display: flex;
   justify-content: center;
@@ -150,6 +172,17 @@ button.secondary:hover:not(:disabled) { background: rgba(255, 204, 0, 0.12); }
 
 .opponent .name { font-weight: 700; font-size: 13px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
 .opponent .you-label { font-size: 10px; color: #ffcc00; letter-spacing: 1px; font-weight: 800; margin-bottom: 2px; }
+.opponent .turn-badge {
+  font-size: 9px;
+  color: #111;
+  background: #ffcc00;
+  border-radius: 999px;
+  display: inline-block;
+  padding: 2px 6px;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
 .opponent .count { font-size: 12px; color: #cde; }
 .opponent.disconnected { opacity: 0.45; }
 .opponent.disconnected .name::after { content: " (away)"; font-size: 10px; color: #fcc; font-weight: 400; }
@@ -236,10 +269,24 @@ button.secondary:hover:not(:disabled) { background: rgba(255, 204, 0, 0.12); }
 #top-card { animation: cardDrop 0.2s ease-out; }
 @keyframes cardDrop { from { transform: translateY(-18px) scale(0.9); opacity: 0.6; } to { transform: none; opacity: 1; } }
 
-#status { font-size: 13px; color: #fff; max-width: 220px; text-align: center; line-height: 1.35; }
+#status { font-size: 13px; color: #fff; max-width: 220px; text-align: center; line-height: 1.35; min-height: 18px; }
 #turn-timer { font-size: 22px; font-weight: 800; color: #ffcc00; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
 #turn-timer.urgent { color: #ff6b6b; animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+
+@media (max-width: 640px) {
+  .screen { padding: 12px 10px 20px; }
+  #game { padding: 10px 10px 20px; }
+  #table-ring { max-height: min(42vh, 320px); }
+  #table-center { inset: 16%; gap: 4px; }
+  .turn-summary { width: min(280px, 100%); border-radius: 14px; }
+  #status { max-width: 100%; font-size: 12px; }
+  #controls { gap: 8px; }
+  #controls button { flex: 1 1 calc(50% - 8px); min-height: 44px; }
+  #hand { gap: 4px; padding: 10px; min-height: 100px; }
+  .card { width: 64px; height: 92px; }
+  #self-seat .opponent { min-width: 112px; }
+}
 
 #uno-btn.urgent {
   background: #d92121; color: #fff;

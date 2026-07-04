@@ -267,6 +267,7 @@ function buildSeatEl(player, { isYou, isTurn, connected }) {
   if (connected === false) d.classList.add('disconnected');
   d.innerHTML = `
     ${isYou ? '<div class="you-label">YOU</div>' : ''}
+    ${isTurn ? '<div class="turn-badge">TURN</div>' : ''}
     <div class="name">${escapeHtml(player.name)}</div>
     <div class="opp-cards">
       <div class="card small back"><div class="oval"><span class="glyph">UNO</span></div></div>
@@ -330,11 +331,21 @@ function renderGame(state) {
 
   const myTurn = state.turnPlayerId === myId;
   const turnPlayer = state.players.find(p => p.id === state.turnPlayerId);
-  let status = myTurn ? 'Your turn.' : `${turnPlayer?.name || '...'}'s turn.`;
-  if (state.drawStack > 0) status += ` Draw stack: ${state.drawStack}.`;
-  if (state.canSkipTurn) status += ' Play your drawn card or pass.';
-  if (state.currentColor !== topCard.color && topCard.color === 'wild') {
-    status += ` Color is ${state.currentColor}.`;
+  const currentIndex = state.players.findIndex(p => p.id === state.turnPlayerId);
+  const nextPlayer = currentIndex >= 0 ? state.players[(currentIndex + dir + n) % n] : null;
+  const turnSummaryTitle = myTurn ? 'Your turn' : `${turnPlayer?.name || '...'} to play`;
+  const turnSummarySub = nextPlayer
+    ? `Next: ${nextPlayer.name}${nextPlayer.id === myId ? ' (you)' : ''} • ${dir === 1 ? 'clockwise' : 'counter-clockwise'}`
+    : 'Next: —';
+
+  $('turn-summary-title').textContent = turnSummaryTitle;
+  $('turn-summary-sub').textContent = turnSummarySub;
+
+  let status = myTurn ? 'Your turn' : `${turnPlayer?.name || '...'}'s turn`;
+  if (state.drawStack > 0) status = `Draw ${state.drawStack} before playing`;
+  else if (state.canSkipTurn) status = 'Play your drawn card or pass';
+  else if (state.currentColor !== topCard.color && topCard.color === 'wild') {
+    status = `Color is ${state.currentColor}`;
   }
   $('status').textContent = status;
   updateTurnCountdown(state);
