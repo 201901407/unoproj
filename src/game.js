@@ -64,7 +64,8 @@ export function currentPlayer(state) {
 
 export function canPlay(state, card) {
   if (state.drawStack > 0) {
-    return card.value === 'draw2' || card.value === 'wild4';
+    if (card.value === 'wild4') return true;
+    return card.value === 'draw2' && card.color === state.currentColor;
   }
   if (card.color === 'wild') return true;
   return card.color === state.currentColor || card.value === state.currentValue;

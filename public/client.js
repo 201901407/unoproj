@@ -239,7 +239,10 @@ function renderCard(card, { small, playable, displayColor } = {}) {
 }
 
 function canPlayClient(state, card) {
-  if (state.drawStack > 0) return card.value === 'draw2' || card.value === 'wild4';
+  if (state.drawStack > 0) {
+    if (card.value === 'wild4') return true;
+    return card.value === 'draw2' && card.color === state.currentColor;
+  }
   if (card.color === 'wild') return true;
   return card.color === state.currentColor || card.value === state.currentValue;
 }
@@ -284,9 +287,6 @@ function renderGame(state) {
   const myIndex = state.players.findIndex(p => p.id === myId);
   const n = state.players.length;
   const dir = state.direction ?? 1;
-
-  $('direction-indicator').textContent = dir === 1 ? '↻' : '↺';
-  $('direction-indicator').title = dir === 1 ? 'Turns go clockwise' : 'Turns go counter-clockwise';
 
   for (const p of state.players) {
     if (p.id === myId) continue;
@@ -335,11 +335,11 @@ function renderGame(state) {
 
   $('turn-summary-title').textContent = turnSummaryTitle;
 
-  let status = myTurn ? 'Your turn' : `${turnPlayer?.name || '...'}'s turn`;
-  if (state.drawStack > 0) status = `Draw ${state.drawStack} before playing`;
-  else if (state.canSkipTurn) status = 'Play your drawn card or pass';
+  let status = '';
+  if (state.drawStack > 0) status = `Draw ${state.drawStack}`;
+  else if (state.canSkipTurn) status = 'Play the card you drew';
   else if (state.currentColor !== topCard.color && topCard.color === 'wild') {
-    status = `Color is ${state.currentColor}`;
+    status = `Color: ${state.currentColor}`;
   }
   $('status').textContent = status;
   updateTurnCountdown(state);
