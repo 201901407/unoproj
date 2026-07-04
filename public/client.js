@@ -250,7 +250,7 @@ function canPlayClient(state, card) {
 function seatPosition(stepsAhead, total) {
   const angleDeg = 180 + (stepsAhead / total) * 180;
   const rad = (angleDeg * Math.PI) / 180;
-  const radius = 46;
+  const radius = total <= 2 ? 40 : total === 3 ? 44 : total === 4 ? 42 : 38;
   return {
     left: `${50 + radius * Math.cos(rad)}%`,
     top: `${50 + radius * Math.sin(rad)}%`,
@@ -270,10 +270,8 @@ function buildSeatEl(player, { isYou, isTurn, connected }) {
   if (connected === false) d.classList.add('disconnected');
   d.innerHTML = `
     ${isYou ? '<div class="you-label">YOU</div>' : ''}
-    ${isTurn ? '<div class="turn-badge">TURN</div>' : ''}
     <div class="name">${escapeHtml(player.name)}</div>
     <div class="opp-cards">
-      <div class="card small back"><div class="oval"><span class="glyph">UNO</span></div></div>
       <div class="count">×${player.handCount}</div>
     </div>
   `;
@@ -332,8 +330,11 @@ function renderGame(state) {
   const myTurn = state.turnPlayerId === myId;
   const turnPlayer = state.players.find(p => p.id === state.turnPlayerId);
   const turnSummaryTitle = myTurn ? 'Your turn' : `${turnPlayer?.name || '...'} to play`;
+  const directionIcon = dir === 1 ? '↻' : '↺';
 
   $('turn-summary-title').textContent = turnSummaryTitle;
+  $('direction-indicator').textContent = directionIcon;
+  $('direction-indicator').title = dir === 1 ? 'Turns go clockwise' : 'Turns go counter-clockwise';
 
   let status = '';
   if (state.drawStack > 0) status = `Draw ${state.drawStack}`;
